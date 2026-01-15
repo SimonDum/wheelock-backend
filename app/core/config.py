@@ -11,6 +11,15 @@ class Settings(BaseSettings):
 
     SENSOR_API_KEY: str
 
+    # Email configuration
+    MAIL_USERNAME: str
+    MAIL_PASSWORD: str
+    MAIL_FROM: str
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str
+    MAIL_FROM_NAME: str = "Wheelock Application"
+    ADMIN_EMAIL: str
+
     class Config:
         env_file = ".env"
         extra = "ignore"
