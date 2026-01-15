@@ -7,12 +7,12 @@ class Settings(BaseSettings):
 
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRE_MINUTES_ADMIN: int = 30
-    JWT_EXPIRE_MINUTES_ANON: int = 60
+    JWT_EXPIRE_MINUTES: int = 60
 
     SENSOR_API_KEY: str
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()

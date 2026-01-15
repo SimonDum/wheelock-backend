@@ -1,0 +1,26 @@
+# =========================
+# ENV / SECRETS
+# =========================
+.env
+.env.*
+*.env
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.venv/
+venv/
+env/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+postgres_data/
+*.sqlite3
+*.log
+.dockerignore
+docker-compose.override.yml
+.vscode/
+.idea/
+*.iml
