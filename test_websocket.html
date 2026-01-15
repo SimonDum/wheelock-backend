@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Wheelock</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; background: #f9f9f9; }
+        .message { margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #eee; }
+        .status-true { color: green; font-weight: bold; } /* Disponible */
+        .status-false { color: red; font-weight: bold; }  /* Occupé */
+    </style>
+</head>
+<body>
+    <h2>🅿Test Wheelock (Client WebSocket)</h2>
+    <p>Statut : <span id="connection-status" style="color:orange">Déconnecté</span></p>
+    
+    <div id="log"></div>
+
+    <script>
+        // Connexion au WebSocket
+        const ws = new WebSocket("ws://localhost:8000/ws/spots");
+        const logDiv = document.getElementById("log");
+        const statusSpan = document.getElementById("connection-status");
+
+        ws.onopen = function() {
+            statusSpan.innerText = "🟢 Connecté en temps réel";
+            statusSpan.style.color = "green";
+            log("Connexion établie avec le serveur parking...");
+        };
+
+        ws.onmessage = function(event) {
+            // C'est ici qu'on reçoit les messages du serveur
+            const data = JSON.parse(event.data);
+            
+            if (data.type === "availability_update") {
+                const etat = data.is_available ? "LIBRE 🟢" : "OCCUPÉ 🔴";
+                log(`Mise à jour Place #${data.spot_id} : ${etat}`);
+            } else {
+                log("Message reçu : " + event.data);
+            }
+        };
+
+        ws.onclose = function() {
+            statusSpan.innerText = "🔴 Déconnecté";
+            statusSpan.style.color = "red";
+            log("Connexion perdue.");
+        };
+
+        function log(text) {
+            const div = document.createElement("div");
+            div.className = "message";
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
+            logDiv.prepend(div);
+        }
+    </script>
+</body>
+</html>
