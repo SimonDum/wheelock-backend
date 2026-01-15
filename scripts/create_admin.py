@@ -2,9 +2,9 @@ import asyncio
 import sys
 from sqlalchemy import select
 
-from appp.database import AsyncSessionLocal
-from appp.core.security import hash_password
-from appp import models
+from app.database import AsyncSessionLocal
+from app.core.security import get_password_hash
+from app import models
 
 
 async def create_admins(pairs: list[tuple[str, str]]):
@@ -21,8 +21,7 @@ async def create_admins(pairs: list[tuple[str, str]]):
 
             new_admin = models.Admin(
                 username=username,
-                password_hash=hash_password(password),
-                is_active=True
+                hashed_password=get_password_hash(password),
             )
 
             db.add(new_admin)

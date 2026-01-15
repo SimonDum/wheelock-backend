@@ -6,7 +6,7 @@ def create_admin_token(admin_id: int):
     payload = {
         "sub": str(admin_id),
         "role": "admin",
-        "exp": datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRE_MINUTES_ADMIN)
+        "exp": datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
     }
     return jwt.encode(
         payload,
