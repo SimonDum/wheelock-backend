@@ -31,5 +31,6 @@ async def get_spots(
         "name": s.name,
         "latitude": to_shape(s.location).y,
         "longitude": to_shape(s.location).x,
-        "is_available": s.is_available
+        "status": s.status,
+        "image_url": s.image_url
     } for s in spots]

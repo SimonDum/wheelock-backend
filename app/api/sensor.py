@@ -17,13 +17,13 @@ async def update_sensor(
     await db.execute(
         update(models.ParkingSpot)
         .where(models.ParkingSpot.id == data.spot_id)
-        .values(is_available=data.is_available)
+        .values(status=data.status)
     )
     await db.commit()
 
     await websockets.manager.broadcast({
         "spot_id": data.spot_id,
-        "is_available": data.is_available
+        "status": data.status.value
     })
 
     return {"status": "ok"}

@@ -18,7 +18,9 @@ async def create_spot(
     location = from_shape(Point(spot.longitude, spot.latitude), srid=4326)
     new = models.ParkingSpot(
         name=spot.name,
-        location=location
+        location=location,
+        status=spot.status,
+        image_url=spot.image_url
     )
     db.add(new)
     await db.commit()
@@ -29,5 +31,6 @@ async def create_spot(
         "name": new.name,
         "latitude": spot.latitude,
         "longitude": spot.longitude,
-        "is_available": new.is_available
+        "status": new.status,
+        "image_url": new.image_url
     }
