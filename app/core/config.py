@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     MAIL_FROM_NAME: str = "Wheelock Application"
     ADMIN_EMAIL: str
 
+    # MinIO / S3 Configuration
+    MINIO_ENDPOINT: str = "http://minio:9000"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    MINIO_BUCKET_NAME: str = "images-public"
+    MINIO_USE_SSL: bool = False
+    MINIO_PUBLIC_ENDPOINT: str = "http://localhost:9000"  # Pour les URLs publiques
+
     class Config:
         env_file = ".env"
         extra = "ignore"
