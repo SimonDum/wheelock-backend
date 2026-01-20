@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from jose import jwt
 from app.core.config import settings
 
@@ -6,7 +6,7 @@ def create_admin_token(admin_id: int):
     payload = {
         "sub": str(admin_id),
         "role": "admin",
-        "exp": datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+        "exp": datetime.now(UTC) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
     }
     return jwt.encode(
         payload,

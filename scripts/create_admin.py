@@ -7,6 +7,10 @@ from app.core.security import get_password_hash
 from app import models
 
 
+"""
+ATTENTION : Pour des raisons de sécurité, évitez de passer les mots de passe en ligne de commande en production.
+Préférez l'utilisation de variables d'environnement ou d'un prompt interactif pour saisir les mots de passe.
+"""
 async def create_admins(pairs: list[tuple[str, str]]):
     async with AsyncSessionLocal() as db:
         for username, password in pairs:
@@ -22,6 +26,7 @@ async def create_admins(pairs: list[tuple[str, str]]):
             new_admin = models.Admin(
                 username=username,
                 hashed_password=get_password_hash(password),
+                is_active=True
             )
 
             db.add(new_admin)

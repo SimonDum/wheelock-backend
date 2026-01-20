@@ -1,39 +1,73 @@
-from pydantic import BaseModel
-from enum import Enum
+from pydantic import BaseModel, Field
+from typing import Optional
 
-class SpotStatus(str, Enum):
-    HS = "HS"  # Hors service
-    LIBRE = "libre"
-    OCCUPE = "occupé"
+from app.models import DockStatus
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=8, max_length=255)
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-class ParkingSpotCreate(BaseModel):
-    name: str
-    latitude: float
-    longitude: float
-    status: SpotStatus = SpotStatus.LIBRE
-    image_url: str | None = None
+class DockCreate(BaseModel):
+    group_id: int
+    sensor_id: str = Field(..., min_length=1, max_length=50)
+    name: Optional[str] = Field(None, max_length=255)
 
-class ParkingSpotResponse(BaseModel):
+
+class DockResponse(BaseModel):
+    id: int
+    sensor_id: str
+    name: Optional[str]
+    status: DockStatus
+
+    class Config:
+        from_attributes = True
+
+class DocksGroupCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    image_url: Optional[str] = Field(None, max_length=2048)
+
+
+
+class DocksGroupResponse(BaseModel):
     id: int
     name: str
+    description: Optional[str]
+    image_url: Optional[str]
     latitude: float
     longitude: float
-    status: SpotStatus
-    image_url: str | None = None
+    total_docks: int
+    available_docks: int
+
+    class Config:
+        from_attributes = True
+
+
+class DocksGroupWithDocksResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    image_url: Optional[str]
+    latitude: float
+    longitude: float
+    docks: list[DockResponse]
+
+    class Config:
+        from_attributes = True
 
 class SensorUpdate(BaseModel):
-    spot_id: int
-    status: SpotStatus
-    status: SpotStatus | None = None
+    sensor_id: str = Field(..., min_length=1, max_length=50)
+    status: DockStatus
+
+class DockUpdate(BaseModel):
+    name: Optional[str] = Field(None, max_length=255)
 
 class DefectReport(BaseModel):
-    stand_id: str
-    location: str | None = None
+    stand_id: str = Field(..., min_length=1, max_length=255)
+    location: str | None = Field(None, max_length=500)

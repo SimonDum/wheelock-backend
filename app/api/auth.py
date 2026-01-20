@@ -21,8 +21,13 @@ async def login(
     )
     admin = result.scalar_one_or_none()
 
-    if not admin or not verify_password(data.password, admin.hashed_password):
-        raise HTTPException(status_code=401)
+
+    if not admin:
+        raise HTTPException(status_code=401, detail="Utilisateur inconnu ou inactif")
+    if not admin.is_active:
+        raise HTTPException(status_code=401, detail="Compte administrateur inactif")
+    if not verify_password(data.password, admin.hashed_password):
+        raise HTTPException(status_code=401, detail="Mot de passe incorrect")
 
     token = create_admin_token(admin.id)
     return {"access_token": token}

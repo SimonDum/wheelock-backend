@@ -7,9 +7,13 @@ from app.database import engine
 app = FastAPI(title="Wheelock API")
 
 # CORS middleware
+import os
+
+# Pour la prod, restreindre les origines autorisées via une variable d'environnement
+origins = os.getenv("CORS_ALLOW_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
