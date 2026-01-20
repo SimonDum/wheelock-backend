@@ -59,6 +59,6 @@ class DockStatusHistory(Base):
     id = Column(Integer, primary_key=True)
     dock_id = Column(Integer, ForeignKey("docks.id"), nullable=False)
     status = Column(SQLEnum(DockStatus), nullable=False)
-    changed_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    changed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
     
     dock = relationship("Dock")

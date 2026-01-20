@@ -27,28 +27,28 @@ async def update_sensor(
         raise HTTPException(status_code=403, detail="Dock hors service")
     
     # Enregistrer le changement dans l'historique si le statut change
-    if dock.status != data.status:
+    if dock.status != data.status and data.status != models.DockStatus.OUT_OF_SERVICE:
         history_entry = models.DockStatusHistory(
             dock_id=dock.id,
             status=data.status
         )
         db.add(history_entry)
     
-    await db.execute(
-        update(models.Dock)
-        .where(models.Dock.sensor_id == data.sensor_id)
-        .values(status=data.status)
-    )
-    await db.commit()
+        await db.execute(
+            update(models.Dock)
+            .where(models.Dock.sensor_id == data.sensor_id)
+            .values(status=data.status)
+        )
+        await db.commit()
 
-    try:
-        await websockets.manager.broadcast({
-            "dock_id": dock.id,
-            "group_id": dock.group_id,
-            "sensor_id": data.sensor_id,
-            "status": data.status.value
-        })
-    except Exception as e:
-        logger.error(f"Erreur lors du broadcast: {e}")
+        try:
+            await websockets.manager.broadcast({
+                "dock_id": dock.id,
+                "group_id": dock.group_id,
+                "sensor_id": data.sensor_id,
+                "status": data.status.value
+            })
+        except Exception as e:
+            logger.error(f"Erreur lors du broadcast: {e}")
 
     return {"status": "ok"}
