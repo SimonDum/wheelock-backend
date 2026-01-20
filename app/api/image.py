@@ -7,55 +7,55 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.models import ParkingSpot
+from app.models import DocksGroup
 from app.core.storage import storage_service
 
 router = APIRouter(prefix="/images", tags=["Images"])
 
 
-@router.post("/upload/parking-spot/{spot_id}")
-async def upload_parking_spot_image(
-    spot_id: int,
+@router.post("/upload/docks-group/{group_id}")
+async def upload_docks_group_image(
+    group_id: int,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     # current_admin = Depends(get_current_admin)  # Décommentez pour protéger la route
 ):
     """
-    Upload une image pour un parking spot et met à jour l'URL dans la base de données
+    Upload une image pour un groupe de docks et met à jour l'URL dans la base de données
     
     Args:
-        spot_id: L'ID du parking spot
+        group_id: L'ID du groupe de docks
         file: Le fichier image à uploader
         db: Session de base de données
         
     Returns:
-        Les informations du parking spot avec l'URL de l'image mise à jour
+        Les informations du groupe avec l'URL de l'image mise à jour
     """
     
-    # 1. Vérifier que le parking spot existe
+    # 1. Vérifier que le groupe existe
     result = await db.execute(
-        select(ParkingSpot).where(ParkingSpot.id == spot_id)
+        select(DocksGroup).where(DocksGroup.id == group_id)
     )
-    parking_spot = result.scalar_one_or_none()
+    docks_group = result.scalar_one_or_none()
     
-    if not parking_spot:
+    if not docks_group:
         raise HTTPException(
             status_code=404,
-            detail=f"Parking spot avec l'ID {spot_id} introuvable"
+            detail=f"Groupe de docks avec l'ID {group_id} introuvable"
         )
     
     # 2. Supprimer l'ancienne image si elle existe
-    if parking_spot.image_url:
-        deletion_success = storage_service.delete_image(parking_spot.image_url)
+    if docks_group.image_url:
+        deletion_success = storage_service.delete_image(docks_group.image_url)
         if not deletion_success:
             # Log l'erreur mais continue quand même
-            print(f"Attention: Impossible de supprimer l'ancienne image: {parking_spot.image_url}")
+            print(f"Attention: Impossible de supprimer l'ancienne image: {docks_group.image_url}")
     
     # 3. Upload la nouvelle image vers MinIO
     try:
         image_url = await storage_service.upload_image(
             file=file,
-            folder="parking-spots"  # Dossier spécifique pour les images de parking
+            folder="docks-groups"  # Dossier spécifique pour les images de groupes
         )
     except HTTPException as e:
         # Re-raise l'exception HTTP du service de stockage
@@ -67,55 +67,55 @@ async def upload_parking_spot_image(
         )
     
     # 4. Mettre à jour l'URL de l'image dans la base de données
-    parking_spot.image_url = image_url
+    docks_group.image_url = image_url
     await db.commit()
-    await db.refresh(parking_spot)
+    await db.refresh(docks_group)
     
     return {
         "message": "Image uploadée avec succès",
-        "parking_spot_id": parking_spot.id,
-        "parking_spot_name": parking_spot.name,
-        "image_url": parking_spot.image_url
+        "docks_group_id": docks_group.id,
+        "docks_group_name": docks_group.name,
+        "image_url": docks_group.image_url
     }
 
 
-@router.delete("/parking-spot/{spot_id}")
-async def delete_parking_spot_image(
-    spot_id: int,
+@router.delete("/docks-group/{group_id}")
+async def delete_docks_group_image(
+    group_id: int,
     db: AsyncSession = Depends(get_db),
     # current_admin = Depends(get_current_admin)  # Décommentez pour protéger la route
 ):
     """
-    Supprime l'image d'un parking spot
+    Supprime l'image d'un groupe de docks
     
     Args:
-        spot_id: L'ID du parking spot
+        group_id: L'ID du groupe de docks
         db: Session de base de données
         
     Returns:
         Message de confirmation
     """
     
-    # 1. Récupérer le parking spot
+    # 1. Récupérer le groupe de docks
     result = await db.execute(
-        select(ParkingSpot).where(ParkingSpot.id == spot_id)
+        select(DocksGroup).where(DocksGroup.id == group_id)
     )
-    parking_spot = result.scalar_one_or_none()
+    docks_group = result.scalar_one_or_none()
     
-    if not parking_spot:
+    if not docks_group:
         raise HTTPException(
             status_code=404,
-            detail=f"Parking spot avec l'ID {spot_id} introuvable"
+            detail=f"Groupe de docks avec l'ID {group_id} introuvable"
         )
     
-    if not parking_spot.image_url:
+    if not docks_group.image_url:
         raise HTTPException(
             status_code=404,
-            detail="Ce parking spot n'a pas d'image associée"
+            detail="Ce groupe de docks n'a pas d'image associée"
         )
     
     # 2. Supprimer l'image de MinIO
-    deletion_success = storage_service.delete_image(parking_spot.image_url)
+    deletion_success = storage_service.delete_image(docks_group.image_url)
     
     if not deletion_success:
         raise HTTPException(
@@ -124,12 +124,12 @@ async def delete_parking_spot_image(
         )
     
     # 3. Mettre à jour la base de données
-    parking_spot.image_url = None
+    docks_group.image_url = None
     await db.commit()
     
     return {
         "message": "Image supprimée avec succès",
-        "parking_spot_id": parking_spot.id
+        "docks_group_id": docks_group.id
     }
 
 
