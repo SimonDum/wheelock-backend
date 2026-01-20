@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum as SQLEnum, ForeignKey, DateTime
-from geoalchemy2 import Geometry
+from sqlalchemy import Column, Integer, String, Boolean, Index, cast, Enum as SQLEnum, ForeignKey, DateTime
+from geoalchemy2 import Geography
 from sqlalchemy.orm import declarative_base, relationship
 import enum
 from datetime import datetime, UTC
@@ -27,7 +27,7 @@ class DocksGroup(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    location = Column(Geometry("POINT", srid=4326, spatial_index=True), nullable=False)
+    location = Column(Geography("POINT", srid=4326, spatial_index=True), nullable=False)
     image_url = Column(String, nullable=True)
 
     docks = relationship(
