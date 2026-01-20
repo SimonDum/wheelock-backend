@@ -33,8 +33,6 @@ class DocksGroupCreate(BaseModel):
     longitude: float = Field(..., ge=-180, le=180)
     image_url: Optional[str] = Field(None, max_length=2048)
 
-
-
 class DocksGroupResponse(BaseModel):
     id: int
     name: str
@@ -65,8 +63,18 @@ class SensorUpdate(BaseModel):
     sensor_id: str = Field(..., min_length=1, max_length=50)
     status: DockStatus
 
+class DocksGroupUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, max_length=1000)
+    latitude: Optional[float] = Field(None, ge=-90, le=90)
+    longitude: Optional[float] = Field(None, ge=-180, le=180)
+    image_url: Optional[str] = Field(None, max_length=2048)
+
 class DockUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=255)
+    group_id: Optional[int] = None
+    sensor_id: Optional[str] = Field(None, min_length=1, max_length=50)
+    status: Optional[DockStatus] = None
 
 class DefectReport(BaseModel):
     stand_id: str = Field(..., min_length=1, max_length=255)
