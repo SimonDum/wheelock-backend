@@ -1,11 +1,12 @@
 from sqlalchemy import select, func, exists
 from sqlalchemy.orm import selectinload
 from geoalchemy2.shape import to_shape
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.core.security import require_admin
 from app import models, schemas
+from app.core.storage import storage_service
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -193,6 +194,12 @@ async def delete_docks_group(
     if not group:
         raise HTTPException(status_code=404, detail="Docks group not found")
 
+    if group.image_url:
+        try:
+            storage_service.delete_image(group.image_url)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Image delete failed: {str(e)}")
+
     await db.delete(group)
     await db.commit()
     
@@ -210,5 +217,51 @@ async def delete_dock(
 
     await db.delete(dock)
     await db.commit()
+    
+    return Response(status_code=204)
+
+
+@router.post("/docks-groups/{group_id}/image", status_code=204)
+async def upload_docks_group_image(
+    group_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    admin: models.Admin = Depends(require_admin),
+):
+    group = await db.get(models.DocksGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Docks group not found")
+    
+    if group.image_url:
+        storage_service.delete_image(group.image_url)
+    
+    try:
+        image_url = await storage_service.upload_image(
+            file=file,
+            folder="docks-groups"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Image upload failed: {str(e)}")
+    
+    group.image_url = image_url
+    await db.commit()
+    await db.refresh(group)
+    
+    return Response(status_code=204)
+
+@router.delete("/docks-groups/{group_id}/image", status_code=204)
+async def delete_docks_group_image_only(
+    group_id: int,
+    db: AsyncSession = Depends(get_db),
+    admin: models.Admin = Depends(require_admin),
+):
+    group = await db.get(models.DocksGroup, group_id)
+    if not group:
+        raise HTTPException(status_code=404, detail="Docks group not found")
+        
+    if group.image_url:
+        storage_service.delete_image(group.image_url)
+        group.image_url = None
+        await db.commit()
     
     return Response(status_code=204)

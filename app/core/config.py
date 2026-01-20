@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str = "minioadmin"
     MINIO_BUCKET_NAME: str = "images-public"
     MINIO_USE_SSL: bool = False
-    MINIO_PUBLIC_ENDPOINT: str = "http://localhost:9000"  # Pour les URLs publiques
+    MINIO_PUBLIC_ENDPOINT: str = "http://10.8.19.72:9000"  # Pour les URLs publiques
 
     class Config:
         env_file = ".env"

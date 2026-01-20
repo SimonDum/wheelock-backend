@@ -46,7 +46,6 @@ class DocksGroupResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class DocksGroupWithDocksResponse(BaseModel):
     id: int
     name: str

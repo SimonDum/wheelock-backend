@@ -36,6 +36,7 @@ async def update_sensor(
     try:
         await websockets.manager.broadcast({
             "dock_id": dock.id,
+            "group_id": dock.group_id,
             "sensor_id": data.sensor_id,
             "status": data.status.value
         })
