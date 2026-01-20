@@ -24,3 +24,8 @@ docker-compose.override.yml
 .vscode/
 .idea/
 *.iml
+
+# =========================
+# SCRIPTS
+# =========================
+scripts/

@@ -52,3 +52,13 @@ class DefectReport(Base):
     location = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
     status = Column(String, default="pending", nullable=False)  # pending, in_progress, resolved
+
+class DockStatusHistory(Base):
+    __tablename__ = "dock_status_history"
+
+    id = Column(Integer, primary_key=True)
+    dock_id = Column(Integer, ForeignKey("docks.id"), nullable=False)
+    status = Column(SQLEnum(DockStatus), nullable=False)
+    changed_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    
+    dock = relationship("Dock")
