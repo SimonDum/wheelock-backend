@@ -26,6 +26,14 @@ async def update_sensor(
     if dock.status == models.DockStatus.OUT_OF_SERVICE:
         raise HTTPException(status_code=403, detail="Dock hors service")
     
+    # Enregistrer le changement dans l'historique si le statut change
+    if dock.status != data.status:
+        history_entry = models.DockStatusHistory(
+            dock_id=dock.id,
+            status=data.status
+        )
+        db.add(history_entry)
+    
     await db.execute(
         update(models.Dock)
         .where(models.Dock.sensor_id == data.sensor_id)
