@@ -1,8 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, admin, public, sensor, websocket, defect, image
+from app.api import auth, admin, public, sensor, websocket, defect, image, logs
 from app import models
 from app.database import engine
+import logging
+
+# Configuration du logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Wheelock API")
 
@@ -23,6 +31,7 @@ app.add_middleware(
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(models.Base.metadata.create_all)
+    logger.info("Wheelock API started successfully")
 
 app.include_router(auth.router)
 app.include_router(admin.router)
@@ -31,3 +40,4 @@ app.include_router(sensor.router)
 app.include_router(websocket.router)
 app.include_router(defect.router)
 app.include_router(image.router)
+app.include_router(logs.router)
