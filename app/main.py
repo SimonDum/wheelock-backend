@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, admin, public, sensor, websocket, defect, image, logs
+from app.api import auth, admin, public, sensor, websocket, defect, image, logs, stats
 from app import models
 from app.database import engine
 import logging
@@ -39,5 +39,5 @@ app.include_router(public.router)
 app.include_router(sensor.router)
 app.include_router(websocket.router)
 app.include_router(defect.router)
-app.include_router(image.router)
 app.include_router(logs.router)
+app.include_router(stats.router)

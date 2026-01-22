@@ -10,7 +10,7 @@ from app.database import get_db
 from app.models import DocksGroup
 from app.core.storage import storage_service
 
-router = APIRouter(prefix="/images", tags=["Images"])
+router = APIRouter(prefix="/images", tags=["images"])
 
 
 @router.post("/upload/docks-group/{group_id}")

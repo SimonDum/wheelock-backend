@@ -4,19 +4,21 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from app.database import get_db
+from app.core.security import require_admin
 from app import models
 from app import schemas
 
-router = APIRouter(prefix="/api/logs", tags=["Logs - Historique des capteurs"])
+router = APIRouter(prefix="/api/admin", tags=["logs"])
 
-@router.get("", response_model=schemas.LogsResponse, summary="Récupérer l'historique des changements d'état des capteurs")
+@router.get("/logs", response_model=schemas.LogsResponse, summary="Récupérer l'historique des changements d'état des capteurs")
 async def get_sensor_logs(
     sensor_id: Optional[str] = Query(None, description="Filtrer par sensor_id (ex: ESP32_TEST_001)"),
     status: Optional[str] = Query(None, description="Filtrer par statut (AVAILABLE, OCCUPIED, OUT_OF_SERVICE)"),
     limit: int = Query(100, ge=1, le=1000, description="Nombre maximum de logs à retourner"),
     start_date: Optional[str] = Query(None, description="Date de début au format YYYY-MM-DD"),
     end_date: Optional[str] = Query(None, description="Date de fin au format YYYY-MM-DD"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    admin: models.Admin = Depends(require_admin)
 ):
     """
     Récupère l'historique des changements d'état des capteurs.
@@ -112,11 +114,12 @@ async def get_sensor_logs(
     return schemas.LogsResponse(total=total, logs=logs)
 
 
-@router.get("/sensor/{sensor_id}", summary="Historique d'un capteur spécifique")
+@router.get("/logs/sensor/{sensor_id}", summary="Historique d'un capteur spécifique")
 async def get_sensor_history(
     sensor_id: str,
     limit: int = Query(50, ge=1, le=1000),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    admin: models.Admin = Depends(require_admin)
 ):
     """
     Récupère l'historique complet d'un capteur spécifique.
@@ -126,9 +129,10 @@ async def get_sensor_history(
     """
     return await get_sensor_logs(sensor_id=sensor_id, limit=limit, db=db)
 
-@router.get("/stats", summary="Statistiques des changements d'état")
+@router.get("/logs/stats", summary="Statistiques des changements d'état")
 async def get_log_stats(
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    admin: models.Admin = Depends(require_admin)
 ):
     """
     Récupère des statistiques sur les changements d'état des capteurs.
