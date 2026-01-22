@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, Depends
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
