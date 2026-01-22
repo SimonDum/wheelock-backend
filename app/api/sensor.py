@@ -16,18 +16,23 @@ async def update_sensor(
     db: AsyncSession = Depends(get_db),
     sensor=Depends(require_sensor_key)
 ):
+    logger.info(f"Sensor update request received: {data.sensor_id} -> {data.status.value}")
+    
     result = await db.execute(
         select(models.Dock).where(models.Dock.sensor_id == data.sensor_id)
     )
     dock = result.scalars().first()
     
     if not dock:
+        logger.warning(f"Dock not found for sensor: {data.sensor_id}")
         raise HTTPException(status_code=404, detail="Dock non trouvé")
     if dock.status == models.DockStatus.OUT_OF_SERVICE:
+        logger.warning(f"Attempted to update OUT_OF_SERVICE dock: {data.sensor_id}")
         raise HTTPException(status_code=403, detail="Dock hors service")
     
     # Enregistrer le changement dans l'historique si le statut change
     if dock.status != data.status:
+        logger.info(f"Status change for {data.sensor_id}: {dock.status.value} -> {data.status.value}")
         history_entry = models.DockStatusHistory(
             dock_id=dock.id,
             status=data.status
@@ -40,6 +45,7 @@ async def update_sensor(
         .values(status=data.status)
     )
     await db.commit()
+    logger.info(f"Sensor {data.sensor_id} updated successfully to {data.status.value}")
 
     try:
         await websockets.manager.broadcast({
@@ -47,7 +53,8 @@ async def update_sensor(
             "sensor_id": data.sensor_id,
             "status": data.status.value
         })
+        logger.debug(f"WebSocket broadcast sent for {data.sensor_id}")
     except Exception as e:
-        logger.error(f"Erreur lors du broadcast: {e}")
+        logger.error(f"Erreur lors du broadcast pour {data.sensor_id}: {e}")
 
     return {"status": "ok"}
