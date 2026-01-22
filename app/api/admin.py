@@ -7,6 +7,7 @@ from app.database import get_db
 from app.core.security import require_admin
 from app import models, schemas
 from app.core.storage import storage_service
+from app.core.security import get_password_hash, verify_password
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -264,4 +265,29 @@ async def delete_docks_group_image_only(
         group.image_url = None
         await db.commit()
     
+    return Response(status_code=204)
+
+
+@router.post("/change-password", status_code=204)
+async def change_admin_password(
+    data: schemas.AdminChangePassword,
+    db: AsyncSession = Depends(get_db),
+    admin: models.Admin = Depends(require_admin),
+):
+    if not verify_password(data.old_password, admin.hashed_password):
+        raise HTTPException(
+            status_code=403,
+            detail="Mot de passe actuel incorrect"
+        )
+
+    if verify_password(data.new_password, admin.hashed_password):
+        raise HTTPException(
+            status_code=400,
+            detail="Le nouveau mot de passe doit être différent"
+        )
+
+    admin.hashed_password = get_password_hash(data.new_password)
+    db.add(admin)
+    await db.commit()
+
     return Response(status_code=204)

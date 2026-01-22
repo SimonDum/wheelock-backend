@@ -16,7 +16,6 @@ class DockCreate(BaseModel):
     sensor_id: str = Field(..., min_length=1, max_length=50)
     name: Optional[str] = Field(None, max_length=255)
 
-
 class DockResponse(BaseModel):
     id: int
     sensor_id: str
@@ -178,3 +177,7 @@ class LogsResponse(BaseModel):
                 ]
             }
         }
+
+class AdminChangePassword(BaseModel):
+    old_password: str = Field(..., min_length=8)
+    new_password: str = Field(..., min_length=8)
