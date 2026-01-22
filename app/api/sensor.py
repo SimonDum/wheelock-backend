@@ -23,32 +23,50 @@ async def update_sensor(
     
     if not dock:
         raise HTTPException(status_code=404, detail="Dock non trouvé")
+    
+    if data.status == models.DockStatus.OUT_OF_SERVICE:
+        raise HTTPException(
+            status_code=403, 
+            detail="Action non autorisée"
+        )
+    
     if dock.status == models.DockStatus.OUT_OF_SERVICE:
         raise HTTPException(status_code=403, detail="Dock hors service")
     
-    # Enregistrer le changement dans l'historique si le statut change
-    if dock.status != data.status and data.status != models.DockStatus.OUT_OF_SERVICE:
-        history_entry = models.DockStatusHistory(
-            dock_id=dock.id,
-            status=data.status
-        )
-        db.add(history_entry)
+    old_status = dock.status
     
-        await db.execute(
-            update(models.Dock)
-            .where(models.Dock.sensor_id == data.sensor_id)
-            .values(status=data.status)
-        )
-        await db.commit()
-
-        try:
-            await websockets.manager.broadcast({
+    if old_status == data.status:
+        logger.debug(f"Statut inchangé pour dock {dock.id}: {old_status.value}")
+        return {"status": "ok", "changed": False}
+    
+    await db.execute(
+        update(models.Dock)
+        .where(models.Dock.sensor_id == data.sensor_id)
+        .values(status=data.status)
+    )
+    
+    history_entry = models.DockStatusHistory(
+        dock_id=dock.id,
+        status=data.status
+    )
+    db.add(history_entry)
+    
+    await db.commit()
+    
+    try:
+        await websockets.manager.broadcast({
                 "dock_id": dock.id,
                 "group_id": dock.group_id,
                 "sensor_id": data.sensor_id,
                 "status": data.status.value
             })
-        except Exception as e:
-            logger.error(f"Erreur lors du broadcast: {e}")
-
-    return {"status": "ok"}
+        logger.info(
+            f"Dock {dock.id} mis à jour: {old_status.value} → {data.status.value}"
+        )
+    except Exception as e:
+        logger.error(
+            f"Erreur broadcast dock {dock.id}: {e}",
+            exc_info=True
+        )
+    
+    return {"status": "ok", "changed": True}
