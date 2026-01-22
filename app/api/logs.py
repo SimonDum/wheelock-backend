@@ -1,65 +1,15 @@
 from fastapi import APIRouter, Query, Depends
 from typing import Optional, List
 from datetime import datetime, timedelta
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from app.database import get_db
 from app import models
+from app import schemas
 
 router = APIRouter(prefix="/api/logs", tags=["Logs - Historique des capteurs"])
 
-# Structure pour les logs de changement d'état
-class SensorLogEntry(BaseModel):
-    id: int
-    sensor_id: str
-    sensor_name: str
-    dock_id: int
-    status: str
-    changed_at: str
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "id": 5733,
-                "sensor_id": "ESP32_TEST_001",
-                "sensor_name": "Quai A - Position 1",
-                "dock_id": 21,
-                "status": "OCCUPIED",
-                "changed_at": "2026-01-22 14:30:45"
-            }
-        }
-
-class LogsResponse(BaseModel):
-    total: int
-    logs: List[SensorLogEntry]
-    
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "total": 2500,
-                "logs": [
-                    {
-                        "id": 5733,
-                        "sensor_id": "ESP32_TEST_001",
-                        "sensor_name": "Quai A - Position 1",
-                        "dock_id": 21,
-                        "status": "OCCUPIED",
-                        "changed_at": "2026-01-22 14:30:45"
-                    },
-                    {
-                        "id": 5732,
-                        "sensor_id": "ESP32_TEST_001",
-                        "sensor_name": "Quai A - Position 1",
-                        "dock_id": 21,
-                        "status": "AVAILABLE",
-                        "changed_at": "2026-01-22 12:15:30"
-                    }
-                ]
-            }
-        }
-
-@router.get("", response_model=LogsResponse, summary="Récupérer l'historique des changements d'état des capteurs")
+@router.get("", response_model=schemas.LogsResponse, summary="Récupérer l'historique des changements d'état des capteurs")
 async def get_sensor_logs(
     sensor_id: Optional[str] = Query(None, description="Filtrer par sensor_id (ex: ESP32_TEST_001)"),
     status: Optional[str] = Query(None, description="Filtrer par statut (AVAILABLE, OCCUPIED, OUT_OF_SERVICE)"),
@@ -148,7 +98,7 @@ async def get_sensor_logs(
     
     # Formater les résultats
     logs = [
-        SensorLogEntry(
+        schemas.SensorLogEntry(
             id=row.id,
             sensor_id=row.sensor_id,
             sensor_name=row.name,
@@ -159,7 +109,7 @@ async def get_sensor_logs(
         for row in rows
     ]
     
-    return LogsResponse(total=total, logs=logs)
+    return schemas.LogsResponse(total=total, logs=logs)
 
 
 @router.get("/sensor/{sensor_id}", summary="Historique d'un capteur spécifique")

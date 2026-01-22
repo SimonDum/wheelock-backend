@@ -129,3 +129,52 @@ class SensorStatsResponse(BaseModel):
                 "out_of_service": 1
             }
         }
+
+class SensorLogEntry(BaseModel):
+    id: int
+    sensor_id: str
+    sensor_name: str
+    dock_id: int
+    status: str
+    changed_at: str
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 5733,
+                "sensor_id": "ESP32_TEST_001",
+                "sensor_name": "Quai A - Position 1",
+                "dock_id": 21,
+                "status": "OCCUPIED",
+                "changed_at": "2026-01-22 14:30:45"
+            }
+        }
+
+class LogsResponse(BaseModel):
+    total: int
+    logs: List[SensorLogEntry]
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "total": 2500,
+                "logs": [
+                    {
+                        "id": 5733,
+                        "sensor_id": "ESP32_TEST_001",
+                        "sensor_name": "Quai A - Position 1",
+                        "dock_id": 21,
+                        "status": "OCCUPIED",
+                        "changed_at": "2026-01-22 14:30:45"
+                    },
+                    {
+                        "id": 5732,
+                        "sensor_id": "ESP32_TEST_001",
+                        "sensor_name": "Quai A - Position 1",
+                        "dock_id": 21,
+                        "status": "AVAILABLE",
+                        "changed_at": "2026-01-22 12:15:30"
+                    }
+                ]
+            }
+        }
