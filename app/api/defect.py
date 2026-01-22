@@ -6,7 +6,7 @@ from app.core.email import send_email_notification
 from app.database import get_db
 from app import models
 
-router = APIRouter(prefix="/api", tags=["defect"])
+router = APIRouter(prefix="/api/public", tags=["defect"])
 logger = logging.getLogger(__name__)
 
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import auth, admin, public, sensor, websocket, defect, image, logs, stats
+from app.api import auth, admin, public, sensor, websocket, defect, logs, stats
 from app import models
 from app.database import engine
 import logging
