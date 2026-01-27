@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Depends
 from typing import Optional
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from app.database import get_db
@@ -37,15 +38,15 @@ async def get_sensor_logs(
     - `/api/logs?start_date=2026-01-20&end_date=2026-01-22` - Sur une période
     """
     
-    # Construire la requête de base avec jointure
+    # Construire la requête de base avec LEFT jointure (pour inclure historique de docks supprimés)
     query = select(
         models.DockStatusHistory.id,
-        models.Dock.sensor_id,
-        models.Dock.name,
+        func.coalesce(models.Dock.sensor_id, models.DockStatusHistory.sensor_id).label('sensor_id'),
+        func.coalesce(models.Dock.name, models.DockStatusHistory.dock_name).label('name'),
         models.DockStatusHistory.dock_id,
         models.DockStatusHistory.status,
         models.DockStatusHistory.changed_at
-    ).join(
+    ).outerjoin(
         models.Dock, 
         models.DockStatusHistory.dock_id == models.Dock.id
     )
@@ -54,9 +55,10 @@ async def get_sensor_logs(
     filters = []
     
     if sensor_id:
-        filters.append(models.Dock.sensor_id == sensor_id)
+        # Utiliser le sensor_id de l'historique (fonctionne même si dock supprimé)
+        filters.append(models.DockStatusHistory.sensor_id == sensor_id)
     
-    if status:
+    if status and isinstance(status, str):
         try:
             status_enum = models.DockStatus[status.upper()]
             filters.append(models.DockStatusHistory.status == status_enum)
@@ -65,14 +67,14 @@ async def get_sensor_logs(
     
     if start_date:
         try:
-            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=ZoneInfo("UTC"))
             filters.append(models.DockStatusHistory.changed_at >= start_dt)
         except ValueError:
             pass
     
     if end_date:
         try:
-            end_dt = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days=1)
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").replace(tzinfo=ZoneInfo("UTC")) + timedelta(days=1)
             filters.append(models.DockStatusHistory.changed_at < end_dt)
         except ValueError:
             pass
@@ -83,7 +85,7 @@ async def get_sensor_logs(
     # Compter le total
     count_query = select(func.count()).select_from(
         models.DockStatusHistory
-    ).join(
+    ).outerjoin(
         models.Dock,
         models.DockStatusHistory.dock_id == models.Dock.id
     )

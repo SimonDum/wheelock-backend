@@ -19,8 +19,8 @@ email_conf = ConnectionConfig(
 fm = FastMail(email_conf)
 
 
-async def send_email_notification(report: DefectReport):
-    """Envoie un email à l'admin pour signaler un socle défectueux"""
+async def send_email_notification(report: DefectReport, group_name: str):
+    """Envoie un email à l'admin pour signaler un groupe de docks défectueux"""
     html_content = f"""
     <html>
         <head>
@@ -28,25 +28,25 @@ async def send_email_notification(report: DefectReport):
         </head>
         <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f5f5f5;">
             <div style="background-color: #6c757d; color: white; padding: 15px; border-bottom: 3px solid #495057;">
-                <h2 style="margin: 0; font-size: 18px;">SIGNALEMENT DE SOCLE DEFECTUEUX</h2>
+                <h2 style="margin: 0; font-size: 18px;">SIGNALEMENT DE GROUPE DE DOCKS DÉFECTUEUX</h2>
             </div>
             
             <div style="background-color: white; padding: 20px; margin: 20px 0;">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td style="padding: 10px 0; border-bottom: 1px solid #dee2e6;">
-                            <strong>ID du socle</strong>
+                            <strong>Groupe de docks</strong>
                         </td>
                         <td style="padding: 10px 0; border-bottom: 1px solid #dee2e6;">
-                            {report.stand_id}
+                            {group_name} (ID: {report.group_id})
                         </td>
                     </tr>
                     <tr>
                         <td style="padding: 10px 0; border-bottom: 1px solid #dee2e6;">
-                            <strong>Localisation</strong>
+                            <strong>Information complémentaire</strong>
                         </td>
                         <td style="padding: 10px 0; border-bottom: 1px solid #dee2e6;">
-                            {report.location or "Non precisee"}
+                            {report.location or "Non précisée"}
                         </td>
                     </tr>
                 </table>
@@ -60,7 +60,7 @@ async def send_email_notification(report: DefectReport):
     """
     
     message = MessageSchema(
-        subject=f"ALERTE - Socle defectueux - {report.stand_id}",
+        subject=f"ALERTE - Groupe de docks défectueux - {group_name}",
         recipients=[settings.ADMIN_EMAIL],
         body=html_content,
         subtype=MessageType.html,

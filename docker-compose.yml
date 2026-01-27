@@ -25,7 +25,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"  # Accessible uniquement en local
     restart: unless-stopped
 
   minio:
@@ -38,8 +38,8 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console Web
+      - "9000:9000"  # API (nécessaire pour l'app mobile)
+      - "127.0.0.1:9001:9001"  # Console accessible uniquement en local
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s

@@ -5,6 +5,7 @@ from app.database import get_db
 from app.core.security import require_admin
 from app import models, schemas
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 router = APIRouter(prefix="/api/admin", tags=["stats"])
 
@@ -150,13 +151,17 @@ async def get_usage_by_day(
     # Parser les dates
     if start_date:
         start = datetime.fromisoformat(start_date)
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=ZoneInfo("UTC"))
     else:
-        start = datetime.now() - timedelta(days=7)
+        start = datetime.now(ZoneInfo("UTC")) - timedelta(days=7)
     
     if end_date:
         end = datetime.fromisoformat(end_date)
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=ZoneInfo("UTC"))
     else:
-        end = datetime.now()
+        end = datetime.now(ZoneInfo("UTC"))
     
     # Récupérer tous les capteurs
     docks_result = await db.execute(select(models.Dock))
@@ -165,6 +170,15 @@ async def get_usage_by_day(
     response = []
     
     for dock in docks:
+        # Récupérer le dernier statut AVANT la période d'analyse
+        last_before_start_query = select(models.DockStatusHistory).where(
+            models.DockStatusHistory.dock_id == dock.id,
+            models.DockStatusHistory.changed_at < start
+        ).order_by(models.DockStatusHistory.changed_at.desc()).limit(1)
+        
+        last_before_result = await db.execute(last_before_start_query)
+        last_before = last_before_result.scalar_one_or_none()
+        
         # Récupérer l'historique pour ce capteur dans la plage de dates
         history_query = select(models.DockStatusHistory).where(
             models.DockStatusHistory.dock_id == dock.id,
@@ -184,8 +198,13 @@ async def get_usage_by_day(
             daily_usage[current_date] = 0
             current_date += timedelta(days=1)
         
-        # Parcourir l'historique pour calculer le temps d'occupation
-        previous_status = dock.status  # Statut actuel ou par défaut
+        # Déterminer le statut initial de la période
+        if last_before:
+            previous_status = last_before.status
+        else:
+            # Aucun historique avant, on suppose AVAILABLE par défaut
+            previous_status = models.DockStatus.AVAILABLE
+        
         previous_time = start
         
         for entry in history:
@@ -197,7 +216,7 @@ async def get_usage_by_day(
                 # Si le changement de statut chevauche plusieurs jours
                 current_time = previous_time
                 while current_time.date() <= entry.changed_at.date():
-                    day_end = datetime.combine(current_time.date(), datetime.max.time())
+                    day_end = datetime.combine(current_time.date(), datetime.max.time(), tzinfo=ZoneInfo("UTC"))
                     day_end = day_end.replace(hour=23, minute=59, second=59)
                     
                     segment_end = min(entry.changed_at, day_end)
@@ -217,7 +236,7 @@ async def get_usage_by_day(
             
             current_time = previous_time
             while current_time.date() <= end.date():
-                day_end = datetime.combine(current_time.date(), datetime.max.time())
+                day_end = datetime.combine(current_time.date(), datetime.max.time(), tzinfo=ZoneInfo("UTC"))
                 day_end = day_end.replace(hour=23, minute=59, second=59)
                 
                 segment_end = min(end, day_end)

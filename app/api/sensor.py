@@ -47,6 +47,8 @@ async def update_sensor(
     
     history_entry = models.DockStatusHistory(
         dock_id=dock.id,
+        sensor_id=dock.sensor_id,
+        dock_name=dock.name,
         status=data.status
     )
     db.add(history_entry)

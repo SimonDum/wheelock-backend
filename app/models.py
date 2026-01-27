@@ -48,16 +48,21 @@ class DefectReport(Base):
     __tablename__ = "defect_reports"
 
     id = Column(Integer, primary_key=True)
-    stand_id = Column(String, nullable=False)
+    group_id = Column(Integer, ForeignKey("docks_groups.id", ondelete="SET NULL"), nullable=True)
+    group_name = Column(String, nullable=True)  # Sauvegarde du nom pour l'historique
     location = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     status = Column(String, default="pending", nullable=False)  # pending, in_progress, resolved
+    
+    group = relationship("DocksGroup")
 
 class DockStatusHistory(Base):
     __tablename__ = "dock_status_history"
 
     id = Column(Integer, primary_key=True)
-    dock_id = Column(Integer, ForeignKey("docks.id"), nullable=False)
+    dock_id = Column(Integer, ForeignKey("docks.id", ondelete="SET NULL"), nullable=True)
+    sensor_id = Column(String, nullable=False)  # Pour garder l'historique
+    dock_name = Column(String, nullable=True)  # Pour garder l'historique
     status = Column(SQLEnum(DockStatus), nullable=False)
     changed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
     

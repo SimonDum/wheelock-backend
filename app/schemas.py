@@ -75,8 +75,8 @@ class DockUpdate(BaseModel):
     status: Optional[DockStatus] = None
 
 class DefectReport(BaseModel):
-    stand_id: str = Field(..., min_length=1, max_length=255)
-    location: str | None = Field(None, max_length=500)
+    group_id: int = Field(..., description="ID du groupe de docks", example=1)
+    location: str | None = Field(None, max_length=500, description="Information complémentaire sur la localisation")
 
 class DailyUsage(BaseModel):
     """Utilisation quotidienne d'un capteur"""
